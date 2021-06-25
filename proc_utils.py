@@ -9,6 +9,7 @@ from nltk.tokenize import RegexpTokenizer
 from collections import Counter
 import re
 from nltk.util import ngrams
+
 '''
 compute tfidf scores of each word in corpus
 @Input args
@@ -19,7 +20,6 @@ words  List[string]
 scores List[double]
 '''
 stopwords = set(stopwords.words('english'))
-ignorewords = set()
 ignorewords = set(['i', 'the', 'one', 'this', 'go', 'always', 'it', 'we', 'people', 'rating', 'like',
                     'got', 'end', 'would', 'note', 'closed', 'came', 'die', 'say', 'right'])
 
@@ -79,19 +79,21 @@ def filter_less_grams(results, max_n=3):
     filtered +=  [word for word in results if len(word.split(' ')) == max_n]
     return filtered
 
-def tfIdf(corpus, ngram_len=2):
+def tfIdf(corpus, ngram_len=2, top_n = 10):
     tfIdf_vect = TfidfVectorizer(stop_words = 'english', ngram_range=(1,ngram_len), use_idf=True)
     tfIdf = tfIdf_vect.fit_transform(corpus)
     
     # tfidf
-    df = pd.DataFrame(tfIdf[0].T.todense(), 
-        index=tfIdf_vect.get_feature_names(), columns=["tfidf"])
-    # filter and sort
-    df = df[df['tfidf'] > 0]
-    df = df.sort_values('tfidf', ascending=False)
-
+    df = pd.DataFrame(tfIdf.T.todense(), index=tfIdf_vect.get_feature_names())
+    # df = df.replace(0, np.NaN)
+    df['aggr'] = df.mean(axis=1)
+    df = df.sort_values('aggr', ascending=False)
+    df = df[['aggr']]
+    df = df.iloc[:top_n]
+    # print(df)
+    
     words = df.index.tolist()
-    scores = df['tfidf'].values.tolist()
+    scores = df['aggr'].values.tolist()
 
     result = [(word,score) for word,score in zip(words, scores) if ngram_check(word.split(' '))]
 
