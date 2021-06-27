@@ -2,6 +2,9 @@ import os
 import json
 import numpy as np
 import random
+from sklearn.feature_extraction.text import TfidfVectorizer
+import pandas as pd
+from proc_utils import filter_less_grams
 
 def get_filepaths(root):
     for root, dirs, files in os.walk(root):
@@ -9,12 +12,12 @@ def get_filepaths(root):
 
 # Return pairs of string with label 1
 # [review 1, review2, score]
-def match_reviews_same(reviews, max=None):
+def match_reviews_same(reviews, max=None, max_pairs=10):
     matches = []
     if max is None:
         max = len(reviews)
     for i in range(max):
-        matches += [(reviews[i], second, 1) for second in reviews[i+1:max]]
+        matches += [(reviews[i], second, 1) for second in reviews[i+1:min(i+1+max_pairs,max)]]
     return matches
 
 # Return pairs of string with score
@@ -48,7 +51,10 @@ def match_reviews_diff(cur_name, reviews, cur_tags, filepaths, max_restaurant=5,
         shorter = min(len(cur_tags), len(other_tags))
         common = intersection(cur_tags, other_tags)
         score = len(common) / shorter
-        
+        score = score * 2
+        if score > 1:
+            score = 1
+
         # Start matching up to max_match
         other_reviews = [f"{rest_data['name']} {review}" for review, score in rest_data['reviews'] if score >= 4]
         # Assert maxmatch condition to not exceed
@@ -60,8 +66,36 @@ def match_reviews_diff(cur_name, reviews, cur_tags, filepaths, max_restaurant=5,
         
     return matches
 
-    
+def get_keyword_review(restaurant_name, reviews, ngram_len=3, top_n=5):
+    tfIdf_vect = TfidfVectorizer(stop_words = 'english', ngram_range=(1,ngram_len), use_idf=True)
+    tfIdf = tfIdf_vect.fit_transform(reviews)
 
+    pairs = []
+    for i in range(len(reviews)):
+        # Get keywords in each review
+        df = pd.DataFrame(tfIdf[i].T.todense(), index=tfIdf_vect.get_feature_names(),
+                            columns=['tfidf'])
+        df = df[df['tfidf'] > 0] # filter
+        df = df.sort_values('tfidf', ascending=False)
+
+        keywords = [(word, score) for word, score in zip(df.index.tolist(), df['tfidf'].values.tolist())]
+        
+        # Get top n probability first
+        if len(reviews[i].split(' ')) < 50:
+            top_n = 6
+        keywords = keywords[:min(top_n, len(keywords))] # filter for top n results, or max num of keywords
+        keywords = filter_less_grams(keywords, max_n=ngram_len) #get keywords in descending order
+        keywords = ' '.join(keywords)
+
+        # if i == 22:
+        #     # print(df)
+        #     print(keywords)
+        #     print(reviews[i])
+        #     exit()
+        pairs.append((keywords, reviews[i]))
+    
+    pairs = [(keywords, f"{restaurant_name} {review}") for keywords, review in pairs]        
+    return pairs, keywords    
 
 
 if __name__ == "__main__":
@@ -73,30 +107,38 @@ if __name__ == "__main__":
 
     total_len = 0
     count = 0
-    for rest_path in files:
+    for idx, rest_path in enumerate(files):
+        print(idx)
         with open(rest_path,'r') as f:
             rest_data = json.load(f)
             if 'Singapore' not in rest_data['address']:
                 continue
-            reviews = [f"{rest_data['name']} {review}" for review, score in rest_data['reviews'] if score >= 4]
+            reviews = [f"{review}" for review, score in rest_data['reviews'] if score >= 4]
             orig_tags = rest_data['review_tags']
             orig_name = rest_data['name']            
 
-            for review in reviews:
-                sentence = review.split(' ')
-                if len(sentence) > max_len:
-                    max_len = len(sentence)
-                    longest = review
-                total_len += len(sentence)
-                count += 1
+            pairs = get_keyword_review(orig_name, reviews, ngram_len=2, top_n=10)
+            if idx == 50:
+                for pair in pairs:
+                    print(pair)
+                    print()
+                exit()
+    #         for review in reviews:
+    #             sentence = review.split(' ')
+    #             if len(sentence) > max_len:
+    #                 max_len = len(sentence)
+    #                 longest = review
+    #             total_len += len(sentence)
+    #             count += 1
                 
-    print(max_len)
-    print(longest)
-    print('avg len:', total_len/count)        
+    # print(max_len)
+    # print(longest)
+    # print('avg len:', total_len/count) 
+           
             # Test pairs 
-            # same_pairs = match_reviews_same(reviews)
+            # same_pairs = match_reviews_same(reviews, max_pairs=10)
             # diff_pairs = match_reviews_diff(orig_name, reviews, orig_tags, files)
-    
+            # print('num_reviews:',len(reviews))
             # print(len(same_pairs))
             # print(len(diff_pairs))
-    
+            # exit()

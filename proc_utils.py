@@ -64,19 +64,23 @@ def get_ngrams_all(corpus, n):
 def filter_less_grams(results, max_n=3):
     filtered = []
     for i in range(1, max_n):
-        words_ngram_prev = [word for word in results if len(word.split(' ')) == i] # get all (i)-gram
-        words_ngram_cur = [word for word in results if len(word.split(' ')) == i + 1] # get all (i+1) gram
+        words_ngram_prev = [(word, score) for word, score in results if len(word.split(' ')) == i] # get all (i)-gram
+        words_ngram_cur = [(word, score) for word, score in results if len(word.split(' ')) == i + 1] # get all (i+1) gram
 
         # Check all smaller words, if is found in any larger word, don't add
-        for word in words_ngram_prev:
+        for word, prev_score in words_ngram_prev:
             add = True
-            for larger_word in words_ngram_cur:
+            for larger_word, cur_score in words_ngram_cur:
                 if word in larger_word:
                     add = False
                     break
+                # else:
+                #     print(word, '+', larger_word)
             if add:
-                filtered.append(word)
-    filtered +=  [word for word in results if len(word.split(' ')) == max_n]
+                filtered.append((word, prev_score))
+    filtered +=  [(word, score) for word, score in results if len(word.split(' ')) == max_n]
+    filtered.sort(key=lambda x:x[1], reverse=True)
+    filtered = [word for word, _ in filtered]
     return filtered
 
 def tfIdf(corpus, ngram_len=2, top_n = 10):
