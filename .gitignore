@@ -1,1 +1,4 @@
 output
+rest_review_distilbert
+rest_review_distilbert_wpool
+rest_review_msmarco_distilbert.onnx
