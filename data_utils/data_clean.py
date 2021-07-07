@@ -62,7 +62,8 @@ if __name__ == "__main__":
             if postal_code in (42, 43, 44, 45, # 15
                                 46, 47, 48, # 16
                                 49, 50, 81, # 17
-                                51, 52 # 18
+                                51, 52, # 18
+                                91
                                 ):
                 region='East'
             if postal_code in (69,70, 71, # 24
