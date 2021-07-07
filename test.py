@@ -8,13 +8,14 @@ import time
 from test_onnx import review_emb
 
 # Model details
-model_name = 'msmarco-MiniLM-L-6-v3'
+# model_name = 'msmarco-MiniLM-L-6-v3'
+model_name = "msmarco-distilbert-base-v3"
 version='v1'
 model_save_path = 'output/review_emb-'+model_name+'-'+version
 
 # If using onnx
-# model = review_emb('rest_review_distilbert_wpool/rest_review_distilbert_wpool.onnx', model_save_path)
-model = review_emb('rest_review_minilm_wpool/rest_review_minilm_wpool.onnx', model_save_path)
+model = review_emb('rest_review_distilbert_wpool/rest_review_distilbert_wpool.onnx', model_save_path)
+# model = review_emb('rest_review_minilm_wpool/rest_review_minilm_wpool.onnx', model_save_path)
 
 # If using SBert
 # model = SentenceTransformer(model_save_path)
@@ -43,16 +44,17 @@ for idx, rest_path in enumerate(files):
         count += 1
 
         ### If already got embedding
-        embeddings2.append(rest_data['embedding'])
+        # embeddings2.append(rest_data['embedding'])
 
         ### To save new embeddings
         # Save emb
-        # emb = model.get_emb(orig_name + ' ' + rest_data['address'] + ' ' + ' '.join(rest_data['review_tags'][:20]) + ' ' + rest_data['summary'])
-        # rest_data['embedding'] = emb.tolist()
-        # with open(rest_path,'w') as json_file:
-        #     json.dump(rest_data, json_file)
-        #     print('Saved:', rest_path)
+        emb = model.get_emb(orig_name + ' ' + rest_data['address'] + ' ' + ' '.join(rest_data['review_tags'][:20]) + ' ' + rest_data['summary'])
+        rest_data['embedding'] = emb.tolist()
+        with open(rest_path,'w') as json_file:
+            json.dump(rest_data, json_file)
+            print('Saved:', rest_path)
 
+exit()
 rest_info_df = pd.DataFrame(rest_info, columns=['name','address','review_tags', 'summary'])
 
 ## Get embeddings with sentence trnasformers
