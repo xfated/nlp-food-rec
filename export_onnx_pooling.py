@@ -1,5 +1,6 @@
 '''
 Code to export model to onnx after adding a pooling layer
+Ref: https://github.com/UKPLab/sentence-transformers/blob/cb08d92822ffcab9915564fd327e6579a5ed5830/examples/onnx_inference/onnx_inference.ipynb
 '''
 from pathlib import Path
 
@@ -14,7 +15,8 @@ from sentence_transformers import SentenceTransformer
 from transformers import convert_graph_to_onnx
 
 # Model location
-model_name = 'msmarco-distilbert-base-v3'
+model_name = 'msmarco-MiniLM-L-6-v3'
+# model_name = 'msmarco-distilbert-base-v3'
 version='v1'
 model_save_path = 'output/review_emb-'+model_name+'-'+version
 
@@ -48,18 +50,19 @@ dynamic_axes["sentence_embedding"] = {0: 'batch'}
 print(output_names)
 print(dynamic_axes)
 
-class SentenceTransformer(transformers.DistilBertModel):
+class SentenceTransformer(transformers.BertModel): # DistilBertModel for distilbert
     def __init__(self, config):
         super().__init__(config)
         # Naming alias for ONNX output specification
         # Makes it easier to identify the layer
         self.sentence_embedding = torch.nn.Identity()
     
-    def forward(self, input_ids, attention_mask):
+    def forward(self, input_ids, token_type_ids, attention_mask): # remove token_type_ids for distilbert
         # Get the token embeddings from the base model
         token_embeddings = super().forward(
                 input_ids, 
-                attention_mask=attention_mask
+                attention_mask=attention_mask,
+                token_type_ids=token_type_ids
             )[0]
         # Stack the pooling layer on top of it
         input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size())
@@ -79,7 +82,7 @@ assert np.allclose(
 )
 
 # Exporting model to onnx
-model_name = 'rest_review_distilbert_wpool'
+model_name = 'rest_review_minilm_wpool'
 outdir = Path(model_name)
 output = outdir / f"{model_name}.onnx"
 outdir.mkdir(parents=True, exist_ok=True)

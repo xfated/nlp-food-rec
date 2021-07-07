@@ -14,10 +14,11 @@ model_save_path = 'output/review_emb-'+model_name+'-'+version
 
 # If using onnx
 # model = review_emb('rest_review_distilbert_wpool/rest_review_distilbert_wpool.onnx', model_save_path)
+model = review_emb('rest_review_minilm_wpool/rest_review_minilm_wpool.onnx', model_save_path)
 
 # If using SBert
-model = SentenceTransformer(model_save_path)
-model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
+# model = SentenceTransformer(model_save_path)
+# model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
 
 root = 'C:/Users/User/Documents/portfolio/food-review-scraper/reviewscraper/restaurant_data'
 files = get_filepaths(root)
@@ -42,23 +43,22 @@ for idx, rest_path in enumerate(files):
         count += 1
 
         ### If already got embedding
-        # embeddings2.append(rest_data['embedding'])
+        embeddings2.append(rest_data['embedding'])
 
         ### To save new embeddings
         # Save emb
-        # emb = model.get_emb(orig_name + ' ' + rest_data['address'] + ' ' + ' '.join(rest_data['review_tags'][:10]) + ' ' + rest_data['summary'])
+        # emb = model.get_emb(orig_name + ' ' + rest_data['address'] + ' ' + ' '.join(rest_data['review_tags'][:20]) + ' ' + rest_data['summary'])
         # rest_data['embedding'] = emb.tolist()
         # with open(rest_path,'w') as json_file:
         #     json.dump(rest_data, json_file)
         #     print('Saved:', rest_path)
-            # exit()
 
 rest_info_df = pd.DataFrame(rest_info, columns=['name','address','review_tags', 'summary'])
 
 ## Get embeddings with sentence trnasformers
-embeddings2 = model.encode(restaurants, convert_to_tensor=True)
-rest_emb = embeddings2.cpu().detach().numpy().astype('float32')
-print(rest_emb.shape)
+# embeddings2 = model.encode(restaurants, convert_to_tensor=True)
+# rest_emb = embeddings2.cpu().detach().numpy().astype('float32')
+# print(rest_emb.shape)
 
 ## Get embeddings with onnx
 # embeddings2 = []
@@ -66,7 +66,7 @@ print(rest_emb.shape)
 #     emb = model.get_emb(res_text)
 #     embeddings2.append(emb)
 # embeddings2 = [model.get_emb(rest_text) for rest_text in restaurants]
-# rest_emb = np.array(embeddings2).astype('float32')
+rest_emb = np.array(embeddings2).astype('float32')
 # print(np.array(embeddings2[0]).shape)
 
 index = faiss.IndexIDMap(faiss.IndexFlatIP(384))
@@ -92,10 +92,10 @@ model = embedding model
 def search(query, top_k, index, model):
     t=time.time()
     ## For using sentence transfofmer
-    query_vector = model.encode([query])
+    # query_vector = model.encode([query])
     ## For using onnx
-    # query_vector = model.get_emb(query)
-    # query_vector = [query_vector]
+    query_vector = model.get_emb(query)
+    query_vector = [query_vector]
     
     top_k = index.search(np.array(query_vector), top_k)
     print('>>>> Results in Total Time: {}'.format(time.time()-t))
