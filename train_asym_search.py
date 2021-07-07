@@ -10,7 +10,7 @@ import gzip
 import csv
 import numpy as np
 import json
-from data_utils import *
+from data_utils.data_utils import *
 import pandas as pd
 
 ### Print debug information to stdout
@@ -23,7 +23,8 @@ logging.basicConfig(format='%(asctime)s - %(message)s',
 
 
 ### Specify training details
-model_name = 'msmarco-distilbert-base-v3'
+# model_name = 'msmarco-distilbert-base-v3'
+model_name = 'msmarco-MiniLM-L-6-v3'
 version='v1'
 train_batch_size = 8
 num_epochs = 4
@@ -50,7 +51,7 @@ for idx, rest_path in enumerate(files):
         # orig_tags = rest_data['review_tags']
         orig_name = rest_data['name']
 
-        pairs = get_keyword_review(orig_name, reviews, ngram_len=2, top_n=5)
+        pairs, keywords = get_keyword_review(orig_name, reviews, ngram_len=2, top_n=10)
         samples += pairs
         
         # for sample in samples:
@@ -63,7 +64,7 @@ for idx, rest_path in enumerate(files):
 # train_samples, test_samples = samples[:train_split], samples[train_split]
 train_samples = samples
 logging.info("Data loaded")
-logging.info("Number of Training Examples:".format(len(train_samples)))
+logging.info("Number of Training Examples: {}".format(len(train_samples)))
 # logging.info("Number of Test Examples:".format(len(test_samples)))
 
 # Convert to InputExample

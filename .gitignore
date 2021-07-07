@@ -1,4 +1,8 @@
+**/__pycache__
+
 output
-rest_review_distilbert
-rest_review_distilbert_wpool
 rest_review_msmarco_distilbert.onnx
+rest_review_distilbert*
+rest_review_distilbert.pb
+
+*.index

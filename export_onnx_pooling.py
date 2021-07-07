@@ -1,3 +1,6 @@
+'''
+Code to export model to onnx after adding a pooling layer
+'''
 from pathlib import Path
 
 import onnx
