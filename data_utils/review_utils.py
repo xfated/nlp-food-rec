@@ -4,7 +4,7 @@ import numpy as np
 import random
 from sklearn.feature_extraction.text import TfidfVectorizer
 import pandas as pd
-from data_utils.proc_utils import filter_less_grams
+from proc_utils import filter_less_grams
 
 def get_filepaths(root):
     for _root, dirs, files in os.walk(root):
@@ -99,7 +99,8 @@ def get_keyword_review(restaurant_name, reviews, ngram_len=3, top_n=5):
 
 
 if __name__ == "__main__":
-    root = 'C:/Users/User/Documents/portfolio/food-review-scraper/reviewscraper/restaurant_data'
+    # root = 'C:/Users/User/Documents/portfolio/food-review-scraper/reviewscraper/restaurant_data'
+    root = 'C:/Users/User/Documents/portfolio/MLPipeline/fastapi/restaurant_data'
     files = get_filepaths(root)
 
     max_len = 0

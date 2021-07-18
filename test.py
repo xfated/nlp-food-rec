@@ -9,19 +9,21 @@ from test_onnx import review_emb
 
 # Model details
 # model_name = 'msmarco-MiniLM-L-6-v3'
-model_name = "msmarco-distilbert-base-v3"
-version='v1'
-model_save_path = 'output/review_emb-'+model_name+'-'+version
+# model_name = "msmarco-distilbert-base-v3"
+# version='v1'
+# model_save_path = 'output/review_emb-'+model_name+'-'+version
 
 # If using onnx
-model = review_emb('rest_review_distilbert_wpool/rest_review_distilbert_wpool.onnx', model_save_path)
-# model = review_emb('rest_review_minilm_wpool/rest_review_minilm_wpool.onnx', model_save_path)
+model_save_path = 'msmarco-distilbert-base-v4'
+model = review_emb('msmarco_distilbert_base_v4_onnx/msmarco_distilbert_base_v4.onnx', model_save_path)
+# model = review_emb('rest_review_distilbert_wpool/rest_review_distilbert_wpool.onnx', model_save_path)
 
 # If using SBert
 # model = SentenceTransformer(model_save_path)
 # model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
 
-root = 'C:/Users/User/Documents/portfolio/food-review-scraper/reviewscraper/restaurant_data'
+# root = 'C:/Users/User/Documents/portfolio/food-review-scraper/reviewscraper/restaurant_data'
+root = 'C:/Users/User/Documents/portfolio/MLPipeline/fastapi/restaurant_data'
 files = get_filepaths(root)
 
 ## Test with user input
@@ -44,17 +46,18 @@ for idx, rest_path in enumerate(files):
         count += 1
 
         ### If already got embedding
-        # embeddings2.append(rest_data['embedding'])
+        embeddings2.append(rest_data['embedding'])
 
         ### To save new embeddings
         # Save emb
-        emb = model.get_emb(orig_name + ' ' + rest_data['address'] + ' ' + ' '.join(rest_data['review_tags'][:20]) + ' ' + rest_data['summary'])
-        rest_data['embedding'] = emb.tolist()
-        with open(rest_path,'w') as json_file:
-            json.dump(rest_data, json_file)
-            print('Saved:', rest_path)
+        # emb = model.get_emb(orig_name + ' ' + rest_data['address'] + ' ' + rest_data['region'] + ' ' + ' '.join(rest_data['review_tags'][:20]) + ' ' + rest_data['summary'])
+        # rest_data['embedding'] = emb.tolist()
+        # with open(rest_path,'w') as json_file:
+        #     json.dump(rest_data, json_file)
+        #     print('Saved:', rest_path)
+            # exit()
 
-exit()
+# exit()
 rest_info_df = pd.DataFrame(rest_info, columns=['name','address','review_tags', 'summary'])
 
 ## Get embeddings with sentence trnasformers
@@ -71,7 +74,7 @@ rest_info_df = pd.DataFrame(rest_info, columns=['name','address','review_tags', 
 rest_emb = np.array(embeddings2).astype('float32')
 # print(np.array(embeddings2[0]).shape)
 
-index = faiss.IndexIDMap(faiss.IndexFlatIP(384))
+index = faiss.IndexIDMap(faiss.IndexFlatIP(768))
 index.add_with_ids(rest_emb, np.array(range(0,len(rest_emb))).astype('int64'))
 faiss.write_index(index, 'rest_emb.index')
 
@@ -102,15 +105,18 @@ def search(query, top_k, index, model):
     top_k = index.search(np.array(query_vector), top_k)
     print('>>>> Results in Total Time: {}'.format(time.time()-t))
     top_k_ids = top_k[1].tolist()[0]
-    top_k_ids = list(np.unique(top_k_ids))
+    print(top_k_ids)
+    # top_k_ids = list(np.unique(top_k_ids))
+    top_k_ids = list(top_k_ids)
+    print(top_k_ids)
     results =  [fetch_rest_info(idx) for idx in top_k_ids]
     return results
 
-user_input = 'durian desserts'
+user_input = 'thai food in the west'
 
 # Best match
 results = search(user_input, top_k=5, index=index, model=model)
 
 print('\n')
-for result in results:
-    print(f"Name: {result['name']}, Tags: {result['review_tags']}\nSummary: {result['summary']}\n")   
+# for result in results:
+#     print(f"Name: {result['name']}, Tags: {result['review_tags']}\nSummary: {result['summary']}\nAddress: {result['address']} \n")   

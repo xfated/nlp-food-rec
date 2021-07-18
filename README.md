@@ -34,3 +34,11 @@ warmup_steps:       10%
 
 
 
+onnx-tf convert -i msmarco_distilbert_base_v4_onnx/msmarco_distilbert_base_v4.onnx -o msmarco-distilbert-v4
+
+
+url:
+
+rest_review_minilm
+rest_review_distilbert
+rest_review_distilbert_base (orig pretrained model)

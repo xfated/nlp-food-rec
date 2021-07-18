@@ -41,23 +41,39 @@ if __name__ == "__main__":
     model = SentenceTransformer('paraphrase-distilroberta-base-v1')
 
     # Get documents
-    root = 'C:/Users/User/Documents/portfolio/food-review-scraper/reviewscraper/restaurant_data'
+    # root = 'C:/Users/User/Documents/portfolio/food-review-scraper/reviewscraper/restaurant_data'
+    root = 'C:/Users/User/Documents/portfolio/MLPipeline/fastapi/restaurant_data'
     files = get_filepaths(root)
 
     # Get main sentences in review
     for idx, rest_path in enumerate(files):
+        # print(rest_path)
         with open(rest_path,'r') as f:
             # Get data for this restaurant
             rest_data = json.load(f)
             if 'Singapore' not in rest_data['address']:
                 continue
 
-            summary = get_summary(rest_data['reviews'], 10)
-
-            rest_data['summary'] = summary
+            ## Get summary
+            # summary = get_summary(rest_data['reviews'], 10)
+            # rest_data['summary'] = summary
             # print(summary)
             # print(len(summary.split(' ')))
 
+            ## change url --> get default google url
+            name = re.sub('[^a-zA-Z0-9 \n\.]', '', rest_data['name']).replace(" ", "+")
+            address = rest_data["address"].replace(" ","+")
+            url = f'https://google.com/search?q={name}+{address}'
+            rest_data['url'] = url
+
+            ## remove last Singapore 
+            # address = rest_data['address']
+            # split_address = address.split(' ')
+            # if split_address[-1] == 'Singapore':
+            #     split_address = split_address[:-1]
+            #     address = ' '.join(split_address)
+            #     rest_data['address'] = address
+                
             with open(rest_path,'w') as json_file:
                 json.dump(rest_data, json_file)
             print('Saved:', rest_path)

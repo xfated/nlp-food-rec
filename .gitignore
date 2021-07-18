@@ -5,5 +5,5 @@ output
 # rest_review_distilbert*
 # rest_review_distilbert.pb
 **/rest_review**
-
+**/msmarco**
 *.index

@@ -97,7 +97,7 @@ if __name__ == "__main__":
             
             # Get data
             filepath = os.path.join(root, name)
-            print(filepath)
+            # print(filepath)
             with open(filepath,'r') as f:
                 data = json.load(f)
             if 'Singapore' not in data['address']:
@@ -105,23 +105,24 @@ if __name__ == "__main__":
 
             # Get tag                
             # Extract tags
-            # rest_data = [review for review, rating in data['reviews']]
-            # rest_data.append(data['about'])
-            # tags = get_tags(rest_data, ngram_len=3, top_n=50)
-            # data['review_tags'] = tags
+            rest_data = [review for review, rating in data['reviews']]
+            rest_data.append(data['about'])
+            tags = get_tags(rest_data, ngram_len=2, top_n=50)
+            data['review_tags'] = tags
             
             # Get region
-            # region = get_region(data['address'])
-            # data['region'] = region
+            region = get_region(data['address'])
+            data['region'] = region
 
             # Get rating
             average_rating = get_rating(data['reviews'])
             data['rating'] = average_rating
-            print(data['rating'])
+            # print(data['rating'])
             # exit()
             
             # Save
             with open(filepath,'w') as json_file:
                 json.dump(data, json_file)
             print('Saved:', filepath)
+            # exit()
         
